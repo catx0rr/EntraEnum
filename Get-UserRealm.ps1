@@ -47,10 +47,22 @@
         [string]$Domain,
         [switch]$WebRequest,
         [switch]$WebBrowser,
-        [switch]$URLs
+        [switch]$URLs,
+        [switch]$IsFederated
     )
 
-    # Ensure -WebRequest and -WebBrowser are not used together
+    if ($URLs -and -not $WebRequest) {
+        throw "The -URLs switch must be used with the -WebRequest switch."
+    }
+
+    if ($IsFederated -and -not $WebRequest) {
+        throw "The -IsFederated switch must be used with the -WebRequest switch."
+    }
+
+    if ($URLs -and $IsFederated) {
+        throw "The -URLs and -IsFederated switches are mutually exclusive. Please use only one at a time."
+    }
+
     if ($WebRequest -and $WebBrowser) {
         throw "The -WebRequest and -WebBrowser switches are mutually exclusive. Please use only one at a time."
     }
@@ -64,6 +76,8 @@
 "@
 
     $url = "https://login.microsoftonline.com/getuserrealm.srf?login=$Domain&xml=1"
+    $bravePath = "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+    $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
     if ($WebRequest) {
         try {
@@ -87,10 +101,22 @@
             if ($URLs) {
                 $xml.SelectNodes("//*") | ForEach-Object {
                     if ($_.InnerText -match "https?://") {
-                        Write-Output $_.InnerText | Select-String '^(http|https)' -CaseSensitive:$false
+                        Write-Output $_.InnerText | Select-String '^(https|http)' -CaseSensitive:$false
                     }
                 }
-            } else {
+            }
+            
+            elseif ($IsFederated) {
+                $isFederatedNode = $xml.SelectSingleNode("//IsFederatedNS")
+              
+                if ($isFederatedNode -ne $null) {
+                    Write-Output $isFederatedNode.InnerText
+                } else {
+                    Write-Output "The IsFederatedNS tag was not found in the XML response."
+                }
+            } 
+
+            else {
                 Write-Output $stringWriter.ToString()
             }
 
@@ -99,10 +125,19 @@
         }
     }
     # If -WebBrowser is specified, open the URL in Brave or Edge
-    if ($WebBrowser) {
-        $bravePath = "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
-        $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-
+    elseif ($WebBrowser) {
+        if (Test-Path $bravePath) {
+            Start-Process $bravePath -ArgumentList $url
+        }
+        elseif (Test-Path $edgePath) {
+            Start-Process $edgePath -ArgumentList $url
+        }
+        else {
+            Write-Output "Neither Brave nor Edge is installed in the default locations."
+        }
+    } 
+    # Default to browser if none of selected
+    else {
         if (Test-Path $bravePath) {
             Start-Process $bravePath -ArgumentList $url
         }

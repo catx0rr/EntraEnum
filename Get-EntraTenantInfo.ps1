@@ -30,9 +30,9 @@
     Opens the URL in Brave Browser to view the OpenID configuration for "megabigtech.com".
 
     .EXAMPLE
-    Invoke-GetTenantInfo -Domain "megabigtech.com" -WebRequest -WebBrowser
+    Invoke-GetTenantInfo -Domain "megabigtech.com" -Id
 
-    Retrieves the OpenID configuration for "megabigtech.com" and opens it in Brave Browser simultaneously.
+    Retrieves and displays the TenantID for "megabigtech.com" via an HTTP GET request.
 
     .NOTES
     Ensure Brave Browser is installed at "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe".
@@ -47,16 +47,12 @@
         [switch]$Id
     )
 
+    if ($Id -and -not $WebRequest) {
+        throw "The -Id switch must be used with the -WebRequest switch."
+    }
+
     if ($WebRequest -and $WebBrowser) {
         throw "The -WebRequest and -WebBrowser switches are mutually exclusive. Please use only one at a time."
-    }
-
-    if ($Id -and $WebBrowser) {
-        throw "The -Id is querying using -WebRequest. Please use only one at a time."
-    }
-
-    if ($Id -and $WebRequest) {
-        throw "The -Id is a clean output of -WebRequest to filter tenant Id. Please use only one at a time."
     }
 
     $banner = @"
@@ -68,41 +64,47 @@
 "@
 
     $url = "https://login.microsoftonline.com/$Domain/.well-known/openid-configuration"
-
-    if ($Id) {
-       try {
-            $response = Invoke-WebRequest -Uri $url -UseBasicParsing
-
-            $jsonContent = $response.Content | ConvertFrom-Json
-            $tokenEndpoint = $jsonContent.token_endpoint
-            $tenantId = ($tokenEndpoint -split '/')[3]
-            Write-Output $banner
-            Start-Sleep 2
-            Write-Output "`nTenant ID for $Domain`: $tenantId"
-       } catch {
-            Write-Output "Failed to invoke web request or parse JSON: $_"
-       }
-    }
+    $bravePath = "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+    $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
     if ($WebRequest) {
         try {
             $response = Invoke-WebRequest -Uri $url -UseBasicParsing
-            
-            $jsonContent = $response.Content | ConvertFrom-Json | ConvertTo-Json -Depth 10 -Compress:$false
-            Write-Output $banner
-            Start-Sleep 2
-            Write-Output "`n$jsonContent"
+
+            if ($Id) {
+                $jsonContent = $response.Content | ConvertFrom-Json
+                $tokenEndpoint = $jsonContent.token_endpoint
+                $tenantId = ($tokenEndpoint -split '/')[3]
+                Write-Output $banner
+                Start-Sleep 2
+                Write-Output "`nTenant ID for $Domain`: $tenantId"
+            } else {
+
+                $jsonContent = $response.Content | ConvertFrom-Json | ConvertTo-Json -Depth 10 -Compress:$false
+                Write-Output $banner
+                Start-Sleep 2
+                Write-Output "`n$jsonContent"
+            }
 
 
         } catch {
             Write-Output "Failed to invoke web request: $_"
         }
     }
-
-    if ($WebBrowser) {
-        $bravePath = "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
-        $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-
+    # If -WebBrowser is specified, open the URL in Brave or Edge 
+    elseif ($WebBrowser) {
+        if (Test-Path $bravePath) {
+            Start-Process $bravePath -ArgumentList $url
+        }
+        elseif (Test-Path $edgePath) {
+            Start-Process $edgePath -ArgumentList $url
+        }
+        else {
+            Write-Output "Neither Brave nor Edge is installed in the default locations."
+        }
+    } 
+    # Default to browser if none selected
+    else {
         if (Test-Path $bravePath) {
             Start-Process $bravePath -ArgumentList $url
         }
