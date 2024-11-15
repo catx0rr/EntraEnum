@@ -21,13 +21,14 @@ Import-Module Get-EntraTenantInfo.ps1
 Examples:
 ```
 Get-Help Invoke-GetUserRealm
-Invoke-GetUserRealm -Domain domain.com
-Invoke-GetUserRealm -Domain domain.com -WebRequest
-Invoke-GetUserRealm -Domain domain.com -WebRequest -URLs
+Invoke-GetUserRealm -Domain megabigtech.com
+Invoke-GetUserRealm -Domain megabigtech.com -WebRequest
+Invoke-GetUserRealm -Domain megabigtech.com -WebRequest -URLs
+Invoke-GetUserRealm -Domain megabigtech.com -WebRequest -IsFederated
 ```
 ```
 Get-Help Invoke-GetEntraTenantInfo
-Invoke-GetTenantInfo -Domain domain.com
-Invoke-GetTenantInfo -Domain domain.com -WebRequest
-Invoke-GetTenantInfo -Domain -WebRequest -Id
+Invoke-GetTenantInfo -Domain megabigtech.com
+Invoke-GetTenantInfo -Domain megabigtech.com -WebRequest
+Invoke-GetTenantInfo -Domain megabigtech.com -WebRequest -Id
 ```
