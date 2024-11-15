@@ -46,7 +46,8 @@
         [Parameter(Mandatory=$true)]
         [string]$Domain,
         [switch]$WebRequest,
-        [switch]$WebBrowser
+        [switch]$WebBrowser,
+        [switch]$URLs
     )
 
     # Ensure -WebRequest and -WebBrowser are not used together
@@ -82,7 +83,16 @@
             $xmlWriter.Close()
             Write-Output $banner
             Start-Sleep 2
-            Write-Output $stringWriter.ToString()
+
+            if ($URLs) {
+                $xml.SelectNodes("//*") | ForEach-Object {
+                    if ($_.InnerText -match "https?://") {
+                        Write-Output $_.InnerText | Select-String '^(http|https)' -CaseSensitive:$false
+                    }
+                }
+            } else {
+                Write-Output $stringWriter.ToString()
+            }
 
         } catch {
             Write-Output "Failed to Invoke web request on URI: $_"
