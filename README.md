@@ -27,8 +27,8 @@ Examples:
 Get-Help Invoke-GetUserRealm
 Invoke-GetUserRealm -Domain megabigtech.com
 Invoke-GetUserRealm -Domain megabigtech.com -WebRequest
-Invoke-GetUserRealm -Domain megabigtech.com -WebRequest -URLs
 Invoke-GetUserRealm -Domain megabigtech.com -WebRequest -IsFederated
+Invoke-GetUserRealm -Domain megabigtech.com -WebRequest -URLs
 ```
 ```
 Get-Help Invoke-GetEntraTenantInfo
