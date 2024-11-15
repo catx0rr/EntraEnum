@@ -11,9 +11,11 @@ cd EntraEnum
 
 via Web-Request
 ```
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/catx0rr/EntraEnum/refs/heads/master/Get-UserRealm.ps1 -OutFile 
-.\Get-UserRealm.ps1
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/catx0rr/EntraEnum/refs/heads/master/Get-UserRealm.ps1 -OutFile .\Get-UserRealm.ps1
+```
+```
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/catx0rr/EntraEnum/refs/heads/master/Get-EntraTenantInfo.ps1 -OutFile .\Get-EntraTenantInfo.ps1
+```
 Import-Module Get-UserRealm.ps1
 Import-Module Get-EntraTenantInfo.ps1
 ```
