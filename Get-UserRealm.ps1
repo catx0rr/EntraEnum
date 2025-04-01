@@ -59,10 +59,6 @@
         throw "The -IsFederated switch must be used with the -WebRequest switch."
     }
 
-    if ($URLs -and $IsFederated) {
-        throw "The -URLs and -IsFederated switches are mutually exclusive. Please use only one at a time."
-    }
-
     if ($WebRequest -and $WebBrowser) {
         throw "The -WebRequest and -WebBrowser switches are mutually exclusive. Please use only one at a time."
     }
@@ -79,9 +75,20 @@
     $bravePath = "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
     $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
+     $userAgents = @(
+	    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    	"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    )
+
+    $randomUserAgent = Get-Random -InputObject $userAgents
+
+    $headers = @{
+	    "User-Agent" = $randomUserAgent
+    }
+
     if ($WebRequest) {
         try {
-            $response = Invoke-WebRequest -Uri $url -UseBasicParsing
+            $response = Invoke-WebRequest -Headers $headers -Uri $url -UseBasicParsing
             
             # Prettify the Response
             $xml = [xml]$response.Content
@@ -98,7 +105,23 @@
             Write-Output $banner
             Start-Sleep 2
 
-            if ($URLs) {
+            if ($IsFederated -and $URLs) {
+                 $isFederatedNode = $xml.SelectSingleNode("//IsFederatedNS")
+              
+                if ($isFederatedNode -ne $null) {
+                    Write-Output $isFederatedNode.InnerText
+                } else {
+                    Write-Output "The IsFederatedNS tag was not found in the XML response."
+                }
+
+                $xml.SelectNodes("//*") | ForEach-Object {
+                    if ($_.InnerText -match "https?://") {
+                        Write-Output $_.InnerText | Select-String '^(https|http)' -CaseSensitive:$false
+                    }
+                }
+            }
+
+            elseif ($URLs) {
                 $xml.SelectNodes("//*") | ForEach-Object {
                     if ($_.InnerText -match "https?://") {
                         Write-Output $_.InnerText | Select-String '^(https|http)' -CaseSensitive:$false

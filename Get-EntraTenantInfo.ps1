@@ -67,9 +67,20 @@
     $bravePath = "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
     $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
+    $userAgents = @(
+	    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    	    "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    )
+
+    $randomUserAgent = Get-Random -InputObject $userAgents
+
+    $headers = @{
+	    "User-Agent" = $randomUserAgent
+    }
+
     if ($WebRequest) {
         try {
-            $response = Invoke-WebRequest -Uri $url -UseBasicParsing
+            $response = Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing
 
             if ($Id) {
                 $jsonContent = $response.Content | ConvertFrom-Json
